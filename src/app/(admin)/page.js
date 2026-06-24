@@ -24,7 +24,7 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-white border-none shadow-lg shadow-gray-200">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg font-medium text-muted-foreground">Today's Revenue</CardTitle>
+              <CardTitle className="text-lg font-medium text-muted-foreground">Today&apos;s Revenue</CardTitle>
               <DollarSign className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
@@ -39,7 +39,7 @@ export default function DashboardPage() {
 
           <Card className="bg-white border-none shadow-lg shadow-gray-200">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg font-medium text-muted-foreground">Today's Appointments</CardTitle>
+              <CardTitle className="text-lg font-medium text-muted-foreground">Today&apos;s Appointments</CardTitle>
               <Calendar className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
