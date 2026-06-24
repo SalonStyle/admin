@@ -57,9 +57,15 @@
 @layer base {
   * {
     @apply border-[rgba(0,0,0,0.2)];
+    font-family: var(--font-satoshi, 'Satoshi'), ui-sans-serif, system-ui, sans-serif,
+      "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+      "Noto Color Emoji";
   }
   body {
-    @apply bg-[rgba(255,255,255,1)] text-[rgba(0,0,0,1)];
+    @apply bg-gray-50 text-[rgba(0,0,0,1)];
+    font-family: var(--font-satoshi, 'Satoshi'), ui-sans-serif, system-ui, sans-serif,
+      "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+      "Noto Color Emoji";
   }
   div[role="dialog"],
   div[role="menu"],

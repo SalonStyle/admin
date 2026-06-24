@@ -50,12 +50,12 @@ export function Sidebar() {
           "lg:z-0"
         )}
       >
-        <div className="flex items-center justify-between border-b border-gray-800 gap-4 mx-auto mt-3 mb-3">
+        <div className={`flex items-center justify-between border-b border-gray-800 gap-4 mt-3 pb-2 mb-2 ${collapsed ? "mx-auto" : ""}`}>
           {!collapsed && (
             <div className="flex items-center">
-              <div className="bg-blue-500 rounded-full p-2">
+              {/* <div className="bg-blue-500 rounded-full p-2">
                 <Scissors className="h-5 w-5 text-white" />
-              </div>
+              </div> */}
               <span className="ml-3 text-lg font-bold">Barber</span>
             </div>
           )}
@@ -74,7 +74,7 @@ export function Sidebar() {
           </Button>
         </div>
 
-        <nav className="py-2  rounded-lg overflow-y-auto bg-gray-700">
+        <nav className="py-2 rounded-lg overflow-y-auto">
           <ul className="space-y-1">
             {menuItems.map((item, index) => {
               const isActive = pathname === item.href;
@@ -83,14 +83,14 @@ export function Sidebar() {
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex items-center py-2 px-3 mx-2 rounded-md",
+                      "flex items-center py-2 mx-2 rounded-md",
                       collapsed ? "justify-center" : "justify-start"
                     )}
                   >
                     <div
                       className={cn(
                         "p-2 rounded-full",
-                        isActive ? "bg-blue-600" : "bg-slate-200"
+                        isActive ? "bg-indigo-600 hover:bg-indigo-700 hover:opacity-90" : "bg-slate-200"
                       )}
                     >
                       <item.icon
@@ -104,7 +104,7 @@ export function Sidebar() {
                       <span
                         className={cn(
                           "ml-3",
-                          isActive ? "text-white font-medium" : "text-gray-300"
+                          isActive ? "text-white font-medium hover:text-white hover:opacity-90" : "text-gray-300"
                         )}
                       >
                         {item.label}
@@ -116,15 +116,6 @@ export function Sidebar() {
             })}
           </ul>
         </nav>
-
-        <div className="py-2 rounded-lg overflow-y-auto bg-gray-700 mt-auto mb-5">
-          <div className={cn("p-2 rounded-full flex items-center")}>
-            <LogOut className="h-3" />
-            {!collapsed && (
-              <span className={cn("ml-3 mb-0 leading-1")}>Log Out</span>
-            )}
-          </div>
-        </div>
       </aside>
     </>
   );
