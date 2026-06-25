@@ -11,6 +11,33 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
+function collectFormData(contentArea, formId, formRef) {
+  if (formRef?.current?.getValues) {
+    return formRef.current.getValues();
+  }
+
+  const form =
+    contentArea?.querySelector(`form#${formId}`) ||
+    contentArea?.querySelector("form") ||
+    document.getElementById(formId);
+
+  if (!form) {
+    return null;
+  }
+
+  const formDataAttr = form.getAttribute("data-form-values");
+  if (formDataAttr) {
+    try {
+      return JSON.parse(formDataAttr);
+    } catch (error) {
+      console.error("Failed to parse form data", error);
+    }
+  }
+
+  const entries = new FormData(form);
+  return Object.fromEntries(entries.entries());
+}
+
 export function UIModal({
   isOpen,
   onClose,
@@ -45,103 +72,75 @@ export function UIModal({
   };
 
   const handleSubmit = (e) => {
-    // Prevent event bubbling to parent modals
     if (e) {
       e.stopPropagation();
       e.preventDefault();
     }
-    
-    // Find form within this modal's content area only, not globally
-    const contentArea = contentRef.current;
-    let form = null;
-    
-    if (contentArea) {
-      form = contentArea.querySelector(`form#${formId}`);
+
+    if (!onSubmit) {
+      return;
     }
-    
-    // Fallback: try global search (for backward compatibility)
-    if (!form) {
-      form = document.getElementById(formId);
+
+    const formData = collectFormData(contentRef.current, formId, formRef);
+
+    if (formData) {
+      onSubmit(formData);
+      return;
     }
-    
-    // Try to get form data from data attribute (set by SimpleForm)
-    if (form) {
-      const formDataAttr = form.getAttribute("data-form-values");
-      if (formDataAttr) {
-        try {
-          const formData = JSON.parse(formDataAttr);
-          if (onSubmit) {
-            onSubmit(formData);
-            return;
-          }
-        } catch (e) {
-          console.error("Failed to parse form data", e);
-        }
-      }
-      
-      const submitButton = form.querySelector('button[type="submit"]');
-      if (submitButton) {
-        submitButton.click();
-        return;
-      }
-    }
-    
-    // Other fallbacks
-    if (formRef?.current) {
-      formRef.current.submit();
-    } else if (onSubmit) {
-      onSubmit();
-    }
+
+    console.warn(`UIModal: could not collect form data (formId="${formId}")`);
   };
 
   const shouldShowSubmit = Boolean(onSubmit || formRef || formId);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
+      <DialogContent
         className={`${sizeClasses[size]} max-h-[90vh] flex flex-col p-0`}
       >
-        {/* Fixed Header */}
         {(title || description) && (
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-200 flex-shrink-0">
-            {title && <DialogTitle className="text-xl font-semibold text-gray-800">{title}</DialogTitle>}
-            {description && <DialogDescription className="mt-1">{description}</DialogDescription>}
+            {title && (
+              <DialogTitle className="text-xl font-semibold text-gray-800">
+                {title}
+              </DialogTitle>
+            )}
+            {description && (
+              <DialogDescription className="mt-1">{description}</DialogDescription>
+            )}
           </DialogHeader>
         )}
 
-        {/* Scrollable Content */}
         <div ref={contentRef} className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
           {children}
         </div>
 
-        {/* Fixed Footer */}
         <DialogFooter className="px-6 py-4 border-t border-gray-200 flex-shrink-0 rounded-b-lg">
-            <div className="flex justify-end gap-2 w-full">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={handleCancel}
+          <div className="flex justify-end gap-2 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+            >
+              {cancelText}
+            </Button>
+            {shouldShowSubmit && (
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSubmit(e);
+                }}
                 disabled={isSubmitting}
+                className="bg-indigo-600 hover:bg-indigo-700 hover:opacity-90 text-white"
               >
-                {cancelText}
+                {isSubmitting ? "Submitting..." : submitText}
               </Button>
-              {shouldShowSubmit && (
-                <Button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSubmit(e);
-                  }}
-                  disabled={isSubmitting}
-                  className="bg-indigo-600 hover:bg-indigo-700 hover:opacity-90 text-white"
-                >
-                  {isSubmitting ? "Submitting..." : submitText}
-                </Button>
-              )}
-            </div>
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
-

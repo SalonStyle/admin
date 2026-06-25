@@ -83,7 +83,7 @@ export default function BookingsPage() {
   const mockTotal = 0;
 
   // Use API data if available, otherwise use mock
-  const bookings = bookingsData?.data || mockBookings;
+  const bookings = bookingsData?.data?.itmes || mockBookings;
   const totalBookings = bookingsData?.total || mockTotal;
 
   const [createBooking, { isLoading: isCreating }] = useCreateBookingMutation();
@@ -517,6 +517,7 @@ export default function BookingsPage() {
         }}
         isSubmitting={isCreating || isUpdating}
         size="2xl"
+        formId="booking-form"
       >
         <SimpleForm
           fields={formFields}

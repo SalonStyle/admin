@@ -61,7 +61,7 @@ export const bookingsApi = createApi({
     updateBooking: builder.mutation({
       query: ({ id, ...bookingData }) => ({
         url: `/${id}`,
-        method: "PUT",
+        method: "PATCH",
         body: bookingData,
       }),
       invalidatesTags: (result, error, { id }) => [{ type: "Booking", id }, "Booking"],

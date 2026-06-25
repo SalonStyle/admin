@@ -1,6 +1,7 @@
 
 import "./globals.css"
 import StoreProvider from "@/lib/redux/store-provider"
+import { AuthInitializer } from "@/components/auth/auth-initializer"
 import localFont from "next/font/local";
 
 const satoshi = localFont({
@@ -47,7 +48,7 @@ const satoshi = localFont({
 
 export const metadata = {
   title: "Salon Admin",
-  description: "Enterprise-grade OTP authentication with Redux Toolkit and Supabase",
+  description: "Salon admin dashboard with role-based authentication",
   generator: "v0.app",
   icons: {
     icon: [
@@ -73,7 +74,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={`${satoshi.variable} font-sans`}>
         <StoreProvider>
-          {children}
+          <AuthInitializer>{children}</AuthInitializer>
         </StoreProvider>
       </body>
     </html>

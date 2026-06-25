@@ -48,13 +48,26 @@ export function DataTable({
   onFilterChange,
   filterValues = {},
   enableInternalFiltering = true,
+  manualPagination = false,
+  totalCount = 0,
+  page: externalPage = 1,
+  pageSize: externalPageSize = 10,
+  onPageChange,
+  onPageSizeChange,
+  onSearchChange,
+  searchValue: externalSearchValue,
 }) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [internalSearchTerm, setInternalSearchTerm] = useState("");
+  const searchTerm =
+    externalSearchValue !== undefined ? externalSearchValue : internalSearchTerm;
   const [selectedRows, setSelectedRows] = useState([]);
   const [internalFilterValues, setInternalFilterValues] = useState({});
   const paginationOptions = [10, 25, 50, 100];
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [internalPage, setInternalPage] = useState(1);
+  const [internalPageSize, setInternalPageSize] = useState(10);
+
+  const currentPage = manualPagination ? externalPage : internalPage;
+  const pageSize = manualPagination ? externalPageSize : internalPageSize;
 
   // Use external filter values if provided, otherwise use internal state
   const activeFilterValues =
@@ -63,37 +76,39 @@ export function DataTable({
   // Handle filter changes
   const handleFilterChange = (newFilterValues) => {
     if (onFilterChange) {
-      // External handling
       onFilterChange(newFilterValues);
     } else if (enableInternalFiltering) {
-      // Internal handling
       setInternalFilterValues(newFilterValues);
     }
-    // Reset to first page when filters change
-    setCurrentPage(1);
+    if (!manualPagination) {
+      setInternalPage(1);
+    }
   };
 
   // Apply search filter
   const searchFilteredData = useMemo(() => {
-    if (!searchField) return data || [];
+    if (onSearchChange || manualPagination || !searchField) return data || [];
 
-    return (data || []).filter((item) => {
+    const dataArray = Array.isArray(data) ? data : [];
+    return dataArray.filter((item) => {
       const searchValue =
         item && item[searchField] !== undefined && item[searchField] !== null
           ? item[searchField].toString().toLowerCase()
           : "";
       return searchValue.includes(searchTerm.toLowerCase());
     });
-  }, [data, searchField, searchTerm]);
+  }, [data, manualPagination, onSearchChange, searchField, searchTerm]);
 
   // Apply all filters (search + custom filters)
   const filteredData = useMemo(() => {
     let result = searchFilteredData;
 
-    // Apply custom filters if enabled
-    if (enableInternalFiltering && filters.length > 0) {
-      result = result.filter((item) => {
-        return filters.every((filter) => {
+    if (!enableInternalFiltering || manualPagination) {
+      return result;
+    }
+
+    result = result.filter((item) => {
+      return filters.every((filter) => {
           const filterValue = activeFilterValues[filter.id];
 
           // Skip filter if no value
@@ -150,12 +165,11 @@ export function DataTable({
               if (filter.operator === "equals") return numValue === numFilter;
               return numValue === numFilter;
 
-            default:
-              return true;
-          }
-        });
+          default:
+            return true;
+        }
       });
-    }
+    });
 
     return result;
   }, [
@@ -163,19 +177,17 @@ export function DataTable({
     activeFilterValues,
     filters,
     enableInternalFiltering,
+    manualPagination,
   ]);
 
-  const totalItems = filteredData.length || 0;
+  const totalItems = manualPagination ? totalCount || 0 : filteredData.length || 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-
-  // Reset to first page if current page is beyond total pages
-  if (currentPage > totalPages && totalPages > 0) {
-    setCurrentPage(1);
-  }
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalItems);
-  const currentData = filteredData?.slice(startIndex, endIndex);
+  const currentData = manualPagination
+    ? data || []
+    : filteredData?.slice(startIndex, endIndex);
 
   const allCurrentPageSelected =
     currentData?.length > 0 &&
@@ -184,15 +196,24 @@ export function DataTable({
     );
 
   const goToPage = (page) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+    const nextPage = Math.max(1, Math.min(page, totalPages));
+    if (manualPagination) {
+      onPageChange?.(nextPage);
+      return;
+    }
+    setInternalPage(nextPage);
   };
 
   const handleChangePageSize = (value) => {
-    const newPageSize = parseInt(value);
-    setPageSize(newPageSize);
+    const newPageSize = parseInt(value, 10);
+    if (manualPagination) {
+      onPageSizeChange?.(newPageSize);
+      return;
+    }
+    setInternalPageSize(newPageSize);
     const firstItemIndex = (currentPage - 1) * pageSize;
     const newPage = Math.floor(firstItemIndex / newPageSize) + 1;
-    setCurrentPage(
+    setInternalPage(
       Math.max(1, Math.min(newPage, Math.ceil(totalItems / newPageSize)))
     );
   };
@@ -273,7 +294,15 @@ export function DataTable({
                 <Input
                   placeholder="Search..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (onSearchChange) {
+                      onSearchChange(value);
+                    } else {
+                      setInternalSearchTerm(value);
+                      setInternalPage(1);
+                    }
+                  }}
                   className="pl-10 bg-white border-gray-200 rounded-lg h-10 shadow-none"
                 />
               </div>
@@ -303,14 +332,14 @@ export function DataTable({
           )}
 
       {/* Table Section */}
-      <div className="rounded-lg overflow-hidden">
+      <div className="rounded-lg overflow-hidden bg-white">
         <div className="overflow-x-auto rounded-lg">
           <Table className="rounded-lg">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-none">
                 {(deleteSelectedEnable || deleteAllEnable) && (
                   <TableHead className={cn(
-                    "w-[50px] px-4 bg-[#EDEDEF] border-none",
+                    "w-[50px] px-4 border-none",
                     "rounded-tl-lg"
                   )}>
                     <Checkbox
@@ -326,7 +355,7 @@ export function DataTable({
                     <TableHead
                       key={index}
                       className={cn(
-                        "!text[#272829] font-medium text-sm px-4 py-3 capitalize bg-[#EDEDEF] border-none",
+                        "!text-gray-600 font-medium text-sm px-4 py-3 capitalize border-b border-gray-200",
                         isFirst && "rounded-tl-lg",
                         isLast && "rounded-tr-lg",
                         column.className
@@ -337,7 +366,7 @@ export function DataTable({
                   );
                 })}
                 {actions && (
-                  <TableHead className="text-right text-[#272829] font-medium text-sm px-4 py-3 capitalize bg-[#EDEDEF] rounded-tr-lg border-none">
+                  <TableHead className="text-right text-gray-600 font-medium text-sm px-4 py-3 capitalize rounded-tr-lg border-b border-gray-200">
                     Actions
                   </TableHead>
                 )}
@@ -430,7 +459,7 @@ export function DataTable({
         </div>
       </div>
 
-      {totalPages > 1 && (
+      {(manualPagination ? totalItems > pageSize : totalPages > 1) && (
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-gray-600">

@@ -23,19 +23,14 @@ export const SimpleForm = forwardRef(function SimpleForm(
     setFormValues(initialData);
   }, [initialData]);
 
-  useImperativeHandle(ref, () => ({
-    getValues: () => formValues,
-  }));
-
-  // Update form data attribute when formValues change
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      const form = document.getElementById(formId);
-      if (form) {
-        form.setAttribute("data-form-values", JSON.stringify(formValues));
-      }
-    }
-  }, [formValues, formId]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      getValues: () => formValues,
+      reset: (values = initialData) => setFormValues(values),
+    }),
+    [formValues, initialData]
+  );
 
   const handleChange = (id, value) => {
     const newValues = { ...formValues, [id]: value };
@@ -52,6 +47,7 @@ export const SimpleForm = forwardRef(function SimpleForm(
       case "text":
       case "number":
       case "email":
+      case "password":
       case "tel":
       case "time":
         return (

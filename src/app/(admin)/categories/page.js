@@ -3,11 +3,11 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Edit, Trash2 } from "lucide-react"
-import { DataTable } from "@/components/admin/data-table"
+import { ServerDataTable } from "@/components/admin/server-data-table"
 import { UIModal } from "@/components/admin/ui-modal"
 import { DeleteConfirmationModal } from "@/components/admin/delete-confirmation-modal"
 import { SimpleForm } from "@/components/admin/simple-form"
-import { TableSkeleton } from "@/components/Skeleton/table-skeleton"
+import { FILTER_TYPES } from "@/components/admin/filter-bar"
 import {
   useGetCategoriesQuery,
   useCreateCategoryMutation,
@@ -15,14 +15,16 @@ import {
   useDeleteCategoryMutation,
 } from "@/lib/redux/features/categories/categories-api"
 
+const STATUS_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+]
+
 export default function CategoriesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState(null)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [categoryToDelete, setCategoryToDelete] = useState(null)
-
-  const { data: categoriesData, isLoading } = useGetCategoriesQuery()
-  const categories = categoriesData?.data || []
 
   const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation()
   const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation()
@@ -45,7 +47,14 @@ export default function CategoriesPage() {
   }
 
   const handleEditCategory = (category) => {
-    setEditingCategory(category)
+    const updateRuiredFields = {
+      id: category.id,
+      name: category.name,
+      description: category.description,
+      status: category.status,
+    }
+    console.log("category", category);
+    setEditingCategory(updateRuiredFields)
     setIsModalOpen(true)
   }
 
@@ -68,13 +77,22 @@ export default function CategoriesPage() {
     }
   }
 
+  const filters = [
+    {
+      id: "status",
+      label: "Status",
+      type: FILTER_TYPES.SELECT,
+      options: STATUS_OPTIONS,
+    },
+  ]
+
   const columns = [
     {
       header: "Category",
       accessorKey: "name",
       cell: (row) => (
         <div className="flex items-center gap-3">
-          <div className="bg-violet-100 p-2 rounded-full">
+          <div className="rounded-full bg-violet-100 p-2">
             <svg className="h-4 w-4 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -96,7 +114,7 @@ export default function CategoriesPage() {
       accessorKey: "status",
       cell: (row) => (
         <div
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
             row.status === "active"
               ? "bg-green-100 text-green-800"
               : "bg-gray-100 text-gray-800"
@@ -127,10 +145,7 @@ export default function CategoriesPage() {
       label: "Status",
       placeholder: "Select status",
       type: "select",
-      options: [
-        { value: "active", label: "Active" },
-        { value: "inactive", label: "Inactive" },
-      ],
+      options: STATUS_OPTIONS,
     },
   ]
 
@@ -155,26 +170,17 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-5">
-      {isLoading ? (
-        <TableSkeleton
-          columns={columns}
-          rows={10}
-          addNewLabel="Add Category"
-          title="All Categories"
-        />
-      ) : (
-        <DataTable
-          data={categories}
-          columns={columns}
-          searchField="name"
-          actions={rowActions}
-          onAddNew={handleAddCategory}
-          addNewLabel="Add Category"
-          maxVisibleActions={3}
-          title="All Categories"
-          subtitle="Manage service categories used when creating services"
-        />
-      )}
+      <ServerDataTable
+        useQuery={useGetCategoriesQuery}
+        columns={columns}
+        filters={filters}
+        actions={rowActions}
+        onAddNew={handleAddCategory}
+        addNewLabel="Add Category"
+        maxVisibleActions={3}
+        title="All Categories"
+        subtitle="Manage service categories used when creating services"
+      />
 
       <UIModal
         isOpen={isModalOpen}
@@ -191,6 +197,7 @@ export default function CategoriesPage() {
           setEditingCategory(null)
         }}
         isSubmitting={isCreating || isUpdating}
+        formId="category-form"
       >
         <SimpleForm
           fields={formFields}

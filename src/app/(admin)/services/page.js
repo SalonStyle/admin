@@ -1,60 +1,125 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { useGetCategoriesQuery } from "@/lib/redux/features/categories/categories-api";
-import { Edit, Trash2 } from "lucide-react";
-import { DataTable } from "@/components/admin/data-table";
-import { UIModal } from "@/components/admin/ui-modal";
-import { DeleteConfirmationModal } from "@/components/admin/delete-confirmation-modal";
-import { SimpleForm } from "@/components/admin/simple-form";
-import { TableSkeleton } from "@/components/Skeleton/table-skeleton";
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { useGetCategoriesQuery } from "@/lib/redux/features/categories/categories-api"
+import {
+  useGetServicesQuery,
+  useCreateServiceMutation,
+  useUpdateServiceMutation,
+  useDeleteServiceMutation,
+} from "@/lib/redux/features/services/services-api"
+import { Edit, Trash2 } from "lucide-react"
+import { ServerDataTable } from "@/components/admin/server-data-table"
+import { UIModal } from "@/components/admin/ui-modal"
+import { DeleteConfirmationModal } from "@/components/admin/delete-confirmation-modal"
+import { SimpleForm } from "@/components/admin/simple-form"
+import { FILTER_TYPES } from "@/components/admin/filter-bar"
+import { getPaginatedList } from "@/lib/api/list-query"
+
+const STATUS_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+]
+
+const DURATION_OPTIONS = [
+  { value: "15", label: "15 min" },
+  { value: "30", label: "30 min" },
+  { value: "45", label: "45 min" },
+  { value: "60", label: "60 min" },
+  { value: "90", label: "90 min" },
+  { value: "120", label: "120 min" },
+]
+
+function normalizeServicePayload(data) {
+  return {
+    name: data.name,
+    description: data.description,
+    duration_minutes: data.duration_minutes ? Number(data.duration_minutes) : undefined,
+    price: data.price ? Number(data.price) : undefined,
+    category_id: data.category_id,
+    status: data.status,
+  }
+}
 
 export default function ServicesPage() {
-  const { data: categoriesData } = useGetCategoriesQuery();
-  const allCategories = categoriesData?.data || [];
-  const activeCategories = allCategories.filter((c) => c.status === "active");
+  const { data: categoriesData } = useGetCategoriesQuery({ limit: 100, status: "active" })
+  const { items: activeCategories } = getPaginatedList(categoriesData)
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingService, setEditingService] = useState(null);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [serviceToDelete, setServiceToDelete] = useState(null);
-  const [services, setServices] = useState([]);
-  const isLoading = false;
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingService, setEditingService] = useState(null)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [serviceToDelete, setServiceToDelete] = useState(null)
+
+  const [createService, { isLoading: isCreating }] = useCreateServiceMutation()
+  const [updateService, { isLoading: isUpdating }] = useUpdateServiceMutation()
+  const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation()
 
   const handleDeleteClick = (id, serviceName) => {
-    setServiceToDelete({ id, name: serviceName });
-    setDeleteModalOpen(true);
-  };
+    setServiceToDelete({ id, name: serviceName })
+    setDeleteModalOpen(true)
+  }
 
   const handleDeleteConfirm = async () => {
-    if (!serviceToDelete) return;
-    // Handle delete logic here (no backend)
-    setServices(services.filter((s) => (s._id || s.id) !== serviceToDelete.id));
-    setDeleteModalOpen(false);
-    setServiceToDelete(null);
-  };
+    if (!serviceToDelete) return
+
+    try {
+      await deleteService(serviceToDelete.id).unwrap()
+      setDeleteModalOpen(false)
+      setServiceToDelete(null)
+    } catch (error) {
+      console.error("Failed to delete service:", error)
+    }
+  }
 
   const handleEditService = (service) => {
-    setEditingService(service);
-    setIsModalOpen(true);
-  };
+    setEditingService({
+      ...service,
+      duration_minutes:
+        service.duration_minutes != null ? String(service.duration_minutes) : "",
+      price: service.price != null ? String(service.price) : "",
+    })
+    setIsModalOpen(true)
+  }
 
   const handleAddService = () => {
-    setEditingService(null);
-    setIsModalOpen(true);
-  };
+    setEditingService(null)
+    setIsModalOpen(true)
+  }
 
   const handleServiceSubmit = async (data) => {
-    // Handle submit logic here (no backend)
-    if (editingService) {
-      setServices(services.map((s) => ((s._id || s.id) === (editingService._id || editingService.id) ? { ...s, ...data } : s)));
-    } else {
-      setServices([...services, { ...data, _id: Date.now().toString() }]);
+    const payload = normalizeServicePayload(data)
+
+    try {
+      if (editingService) {
+        await updateService({ id: editingService.id, ...payload }).unwrap()
+      } else {
+        await createService(payload).unwrap()
+      }
+      setIsModalOpen(false)
+      setEditingService(null)
+    } catch (error) {
+      console.error("Failed to save service:", error)
     }
-    setIsModalOpen(false);
-    setEditingService(null);
-  };
+  }
+
+  const filters = [
+    {
+      id: "category_id",
+      label: "Category",
+      type: FILTER_TYPES.SELECT,
+      options: activeCategories.map((category) => ({
+        value: category.id,
+        label: category.name,
+      })),
+    },
+    {
+      id: "status",
+      label: "Status",
+      type: FILTER_TYPES.SELECT,
+      options: STATUS_OPTIONS,
+    },
+  ]
 
   const columns = [
     {
@@ -62,9 +127,14 @@ export default function ServicesPage() {
       accessorKey: "name",
       cell: (row) => (
         <div className="flex items-center gap-3">
-          <div className="bg-blue-100 p-2 rounded-full">
+          <div className="rounded-full bg-blue-100 p-2">
             <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"
+              />
             </svg>
           </div>
           <div>
@@ -76,28 +146,25 @@ export default function ServicesPage() {
     },
     {
       header: "Duration",
-      accessorKey: "duration",
-      cell: (row) => <span>{row.duration} min</span>,
+      accessorKey: "duration_minutes",
+      cell: (row) => <span>{row.duration_minutes} min</span>,
     },
     {
       header: "Price",
       accessorKey: "price",
-      cell: (row) => <span>${row.price?.toFixed(2) || "0.00"}</span>,
+      cell: (row) => <span>${Number(row.price || 0).toFixed(2)}</span>,
     },
     {
       header: "Category",
-      accessorKey: "category_id",
-      cell: (row) => {
-        const category = allCategories.find((c) => c.id === row.category_id);
-        return <span>{category?.name || "—"}</span>;
-      },
+      accessorKey: "category_name",
+      cell: (row) => <span>{row.category_name || "—"}</span>,
     },
     {
       header: "Status",
       accessorKey: "status",
       cell: (row) => (
         <div
-          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
             row.status === "active"
               ? "bg-green-100 text-green-800"
               : "bg-gray-100 text-gray-800"
@@ -107,42 +174,38 @@ export default function ServicesPage() {
         </div>
       ),
     },
-  ];
+  ]
 
   const formFields = [
     {
       id: "name",
       label: "Service Name",
-      placeholder: "Enter service name",
+      placeholder: "Classic Haircut",
       type: "text",
+      required: true,
     },
     {
       id: "description",
       label: "Description",
-      placeholder: "Enter service description",
+      placeholder: "Includes wash, cut, and blow-dry",
       type: "textarea",
     },
     {
-      id: "duration",
+      id: "duration_minutes",
       label: "Duration",
       placeholder: "Select duration",
       col: "col-span-6",
       type: "select",
-      options: [
-        { value: "15", label: "15 min" },
-        { value: "30", label: "30 min" },
-        { value: "45", label: "45 min" },
-        { value: "60", label: "60 min" },
-        { value: "90", label: "90 min" },
-        { value: "120", label: "120 min" },
-      ],
+      required: true,
+      options: DURATION_OPTIONS,
     },
     {
       id: "price",
       label: "Price ($)",
-      placeholder: "0.00",
+      placeholder: "45",
       type: "number",
       col: "col-span-6",
+      required: true,
     },
     {
       id: "category_id",
@@ -160,12 +223,9 @@ export default function ServicesPage() {
       label: "Status",
       placeholder: "Select status",
       type: "select",
-      options: [
-        { value: "active", label: "Active" },
-        { value: "inactive", label: "Inactive" },
-      ],
+      options: STATUS_OPTIONS,
     },
-  ];
+  ]
 
   const rowActions = (row) => [
     <Button
@@ -180,54 +240,46 @@ export default function ServicesPage() {
       key="delete"
       variant="outline"
       size="icon"
-      onClick={() => handleDeleteClick(row._id || row.id, row.name)}
+      onClick={() => handleDeleteClick(row.id, row.name)}
     >
       <Trash2 className="h-4 w-4" />
     </Button>,
-  ];
+  ]
 
   return (
     <div className="space-y-5">
-      {isLoading ? (
-        <TableSkeleton
-          columns={columns}
-          rows={10}
-          addNewLabel="Add Service"
-          title="All Services"
-        />
-      ) : (
-        <DataTable
-          data={services}
-          columns={columns}
-          searchField="name"
-          actions={rowActions}
-          onAddNew={handleAddService}
-          addNewLabel="Add Service"
-          maxVisibleActions={3}
-          title="All Services"
-          subtitle=""
-        />
-      )}
+      <ServerDataTable
+        useQuery={useGetServicesQuery}
+        columns={columns}
+        filters={filters}
+        actions={rowActions}
+        onAddNew={handleAddService}
+        addNewLabel="Add Service"
+        maxVisibleActions={3}
+        title="All Services"
+        subtitle="Manage salon services linked to categories"
+      />
 
       <UIModal
         isOpen={isModalOpen}
         onClose={() => {
-          setIsModalOpen(false);
-          setEditingService(null);
+          setIsModalOpen(false)
+          setEditingService(null)
         }}
         title={editingService ? "Edit Service" : "Add New Service"}
         onSubmit={handleServiceSubmit}
         submitText={editingService ? "Update Service" : "Create Service"}
         cancelText="Cancel"
         onCancel={() => {
-          setIsModalOpen(false);
-          setEditingService(null);
+          setIsModalOpen(false)
+          setEditingService(null)
         }}
-        isSubmitting={false}
+        isSubmitting={isCreating || isUpdating}
+        formId="service-form"
       >
         <SimpleForm
           fields={formFields}
-          initialData={editingService || {}}
+          initialData={editingService || { status: "active" }}
           formId="service-form"
         />
       </UIModal>
@@ -235,15 +287,15 @@ export default function ServicesPage() {
       <DeleteConfirmationModal
         isOpen={deleteModalOpen}
         onClose={() => {
-          setDeleteModalOpen(false);
-          setServiceToDelete(null);
+          setDeleteModalOpen(false)
+          setServiceToDelete(null)
         }}
         onConfirm={handleDeleteConfirm}
         title="Delete Service"
         description="Are you sure you want to delete this service? This action cannot be undone."
         itemName={serviceToDelete?.name}
-        isDeleting={false}
+        isDeleting={isDeleting}
       />
     </div>
-  );
+  )
 }

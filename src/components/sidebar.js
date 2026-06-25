@@ -24,7 +24,7 @@ export function Sidebar() {
 
   const menuItems = [
     { icon: LayoutDashboard, href: "/", label: "Dashboard" },
-    { icon: Users, href: "/users", label: "Users" },
+    { icon: Users, href: "/members", label: "Members" },
     { icon: Scissors, href: "/services", label: "Services" },
     { icon: Calendar, href: "/bookings", label: "Bookings" },
     // { icon: BarChart2, href: "/reports", label: "Reports" },

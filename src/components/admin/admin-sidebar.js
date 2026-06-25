@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
   Users,
@@ -13,13 +13,12 @@ import {
   Menu,
   ChevronDown,
   LogOut,
-  User,
-  X,
   Search,
   ChevronRight,
   Rocket,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+  Store,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,15 +26,22 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { useMemo, useState } from "react"
+import { useAuth } from "@/hooks/useAuth"
+import { canAccessRoute } from "@/lib/auth/routes"
 
 const navItems = [
   {
     title: "Dashboard",
     href: "/",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Salons",
+    href: "/salons",
+    icon: Store,
   },
   {
     title: "Services",
@@ -48,8 +54,8 @@ const navItems = [
     icon: Tags,
   },
   {
-    title: "Users",
-    href: "/users",
+    title: "Members",
+    href: "/members",
     icon: Users,
   },
   {
@@ -57,46 +63,39 @@ const navItems = [
     href: "/bookings",
     icon: Calendar,
   },
-];
+]
 
 export default function AdminSidebar({ collapsed, setCollapsed }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
+  const pathname = usePathname()
+  const router = useRouter()
+  const [searchQuery, setSearchQuery] = useState("")
+  const { user, signOut, isLoggingOut, primaryRole } = useAuth()
 
-  
+  const visibleNavItems = useMemo(
+    () => navItems.filter((item) => canAccessRoute(primaryRole, item.href)),
+    [primaryRole]
+  )
+
   const handleLogout = async () => {
-    try {
-      // Sign out from Supabase to clear session cookies
-      
-      // Clear Redux state
-      
-      // Refresh router to ensure middleware picks up the cleared session
-      router.refresh()
-      // Navigate using Next.js router for proper client-side navigation
-      router.push("/login")
-    } catch (error) {
-      console.error("Error signing out:", error)
-      // Even on error, clear state and redirect to login
-      router.refresh()
-      router.push("/login")
-    }
+    await signOut()
+    router.refresh()
+    router.push("/login")
   }
 
+  const displayName = user?.email?.split("@")[0] || "User"
+  const roleLabel = primaryRole?.replace("_", " ")
 
   return (
     <>
-      {/* Mobile Menu Button */}
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-5 left-4 z-50 md:hidden bg-white border border-gray-200 shadow-sm"
+        className="fixed top-5 left-4 z-50 border border-gray-200 bg-white shadow-sm md:hidden"
         onClick={() => setCollapsed(!collapsed)}
       >
         <Menu className="h-5 w-5" />
       </Button>
 
-      {/* Mobile Overlay */}
       {!collapsed && (
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
@@ -104,33 +103,29 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
         />
       )}
 
-      {/* Sidebar - Dark Theme */}
       <aside
         className={cn(
           "fixed left-0 top-0 z-50 h-screen transition-all duration-300",
-          "bg-[#f3f3f3] text-white border-r border-gray-200",
-          // Mobile: slide in/out from left
+          "border-r border-gray-200 bg-[#f3f3f3] text-white",
           "md:translate-x-0",
           collapsed ? "-translate-x-full md:translate-x-0" : "translate-x-0",
-          // Desktop: width changes
           "w-64 md:w-64",
           collapsed && "md:w-18"
         )}
       >
         <div className="flex h-full flex-col">
-          {/* Dashboard Header */}
-          <div className={cn(
-            "px-4 py-4 flex items-center justify-between",
-            collapsed && "md:justify-center"
-          )}>
-            {!collapsed && (
-              <h2 className="text-lg font-semibold text-gray-900">Dashboard</h2>
+          <div
+            className={cn(
+              "flex items-center justify-between px-4 py-4",
+              collapsed && "md:justify-center"
             )}
+          >
+            {!collapsed && <h2 className="text-lg font-semibold text-gray-900">Dashboard</h2>}
             {!collapsed && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-gray-400 hover:text-gray-900 hover:bg-gray-200"
+                className="h-8 w-8 text-gray-400 hover:bg-gray-200 hover:text-gray-900"
                 onClick={() => setCollapsed(true)}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -140,7 +135,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-gray-400 hover:text-gray-900 hover:bg-gray-200"
+                className="h-8 w-8 text-gray-400 hover:bg-gray-200 hover:text-gray-900"
                 onClick={() => setCollapsed(false)}
               >
                 <ChevronRight className="h-4 w-4" />
@@ -148,29 +143,28 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
             )}
           </div>
 
-          {/* Search Bar */}
-          
-            <div className={`w-full px-3`}>
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  type="search"
-                  placeholder={collapsed ? "" : "Search"}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full bg-white h-10 border-gray-200 text-gray-900 focus:border-[#8850FF] focus:ring-[#8850FF] ${collapsed ? "" : "pl-9 pr-8"}`}
-                />
-                {!collapsed && <kbd className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-gray-700 bg-gray-800 px-1.5 font-mono text-[10px] font-medium text-gray-400">
+          <div className="w-full px-3">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+              <Input
+                type="search"
+                placeholder={collapsed ? "" : "Search"}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`h-10 w-full border-gray-200 bg-white text-gray-900 focus:border-[#8850FF] focus:ring-[#8850FF] ${collapsed ? "" : "pl-9 pr-8"}`}
+              />
+              {!collapsed && (
+                <kbd className="pointer-events-none absolute right-2 top-1/2 inline-flex h-5 -translate-y-1/2 transform select-none items-center gap-1 rounded border border-gray-700 bg-gray-800 px-1.5 font-mono text-[10px] font-medium text-gray-400">
                   K
-                </kbd>}
-              </div>
+                </kbd>
+              )}
             </div>
+          </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto py-3 px-3">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
+          <nav className="flex-1 overflow-y-auto px-3 py-3">
+            {visibleNavItems.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
 
               return (
                 <Link
@@ -178,7 +172,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                   href={item.href}
                   onClick={() => setCollapsed(false)}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all mb-1 relative",
+                    "relative mb-1 flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
                     isActive
                       ? "bg-[#8850FF] text-white"
                       : "text-gray-900 hover:bg-gray-200 hover:text-gray-900",
@@ -189,23 +183,22 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                   <Icon className="h-5 w-5 flex-shrink-0" />
                   {!collapsed && <span>{item.title}</span>}
                 </Link>
-              );
+              )
             })}
           </nav>
 
-          {/* Trial Card */}
           {!collapsed && (
-            <div className="mx-3 mb-3 p-4 rounded-lg bg-gray-200 border border-gray-200">
+            <div className="mx-3 mb-3 rounded-lg border border-gray-200 bg-gray-200 p-4">
               <div className="flex items-start gap-3">
-                <Rocket className="h-5 w-5 text-gray-900 flex-shrink-0 mt-0.5" />
+                <Rocket className="mt-0.5 h-5 w-5 flex-shrink-0 text-gray-900" />
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-900 mb-1">Trial Ending Soon!</p>
-                  <p className="text-xs text-gray-400 mb-3">
+                  <p className="mb-1 text-sm font-semibold text-gray-900">Trial Ending Soon!</p>
+                  <p className="mb-3 text-xs text-gray-400">
                     Your access expires in 6 days. Upgrade now for access!
                   </p>
                   <Button
                     size="sm"
-                    className="w-full bg-[#8850FF] hover:bg-[#8850FF]/90 text-white text-xs h-8"
+                    className="h-8 w-full bg-[#8850FF] text-xs text-white hover:bg-[#8850FF]/90"
                   >
                     Upgrade to Pro
                   </Button>
@@ -214,38 +207,32 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
             </div>
           )}
 
-          {/* User Profile */}
           <div className="p-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   className={cn(
-                    "w-full flex items-center h-auto gap-2 bg-gray-200 p-2 rounded-lg",
+                    "flex h-auto w-full items-center gap-2 rounded-lg bg-gray-200 p-2",
                     collapsed ? "md:justify-center" : "justify-between"
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#8850FF] flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                      {/* {user?.email?.charAt(0).toUpperCase()} */}
-                      H
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#8850FF] text-sm font-semibold text-white">
+                      {user?.email?.charAt(0).toUpperCase() || "U"}
                     </div>
                     {!collapsed && (
-                      <div className="flex flex-col text-left min-w-0">
-                        <span className="text-sm font-medium text-gray-900 truncate max-w-[150px]">
-                          {/* {user?.email?.split("@")[0]} */}
-                          Harhist Bakraniya
+                      <div className="flex min-w-0 flex-col text-left">
+                        <span className="max-w-[150px] truncate text-sm font-medium text-gray-900">
+                          {displayName}
                         </span>
-                        <span className="text-xs text-gray-500 truncate max-w-[100px]">
-                          {/* {user?.email} */}
-                          harshit@gmail.com
+                        <span className="max-w-[150px] truncate text-xs text-gray-500">
+                          {user?.email}
                         </span>
                       </div>
                     )}
                   </div>
-                  {!collapsed && (
-                    <ChevronDown className="h-4 w-4 text-gray-400" />
-                  )}
+                  {!collapsed && <ChevronDown className="h-4 w-4 text-gray-400" />}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -255,20 +242,20 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
               >
                 <DropdownMenuLabel>
                   <p className="text-xs text-gray-500">Signed in as</p>
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {/* {user?.email} */}
-                  </p>
+                  <p className="truncate text-sm font-medium text-gray-900">{user?.email}</p>
+                  {roleLabel && <p className="text-xs text-gray-500">{roleLabel}</p>}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="cursor-pointer hover:bg-[#8850FF]/10 hover:text-[#8850FF]"
+                  disabled={isLoggingOut}
                   onSelect={(event) => {
-                    event.preventDefault();
-                    handleLogout();
+                    event.preventDefault()
+                    handleLogout()
                   }}
                 >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  <span>Logout</span>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>{isLoggingOut ? "Signing out..." : "Logout"}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -276,6 +263,5 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
         </div>
       </aside>
     </>
-  );
+  )
 }
-
