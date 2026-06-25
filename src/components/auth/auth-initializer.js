@@ -62,7 +62,7 @@ export function AuthInitializer({ children }) {
   const shouldValidateSession = Boolean(accessToken) && !isPublicRoute
 
   const { isError, isSuccess, data } = useGetMeQuery(undefined, {
-    skip: !shouldValidateSession,
+    skip: !accessToken,
   })
 
   useEffect(() => {
@@ -73,10 +73,10 @@ export function AuthInitializer({ children }) {
   }, [dispatch, isError])
 
   useEffect(() => {
-    if (!isPublicRoute || !isSuccess || !data?.user) return
+    if (!isPublicRoute || !accessToken || !isSuccess || !data?.user) return
     const roleCode = getPrimaryRoleCode(data.user)
     router.replace(getDefaultRouteForRole(roleCode))
-  }, [data, isPublicRoute, isSuccess, router])
+  }, [accessToken, data, isPublicRoute, isSuccess, router])
 
   if (!isInitialized) {
     return <SessionLoader />

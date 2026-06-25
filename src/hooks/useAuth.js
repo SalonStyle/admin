@@ -36,7 +36,7 @@ export function useAuth() {
 
   const [logoutMutation, { isLoading: isLoggingOut }] = useLogoutMutation()
 
-  const profile = meData?.user || user
+  const profile = auth.accessToken ? meData?.user || user : null
   const isSessionPending =
     Boolean(auth.accessToken) && !isAuthenticated && (isMeLoading || isMeFetching)
   const primaryRole = useMemo(() => getPrimaryRoleCode(profile), [profile])

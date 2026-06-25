@@ -78,8 +78,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
 
   const handleLogout = async () => {
     await signOut()
-    router.refresh()
-    router.push("/login")
+    router.replace("/login")
   }
 
   const displayName = user?.email?.split("@")[0] || "User"

@@ -37,17 +37,27 @@ function LoginForm() {
 
   const [signIn, { isLoading }] = useSignInMutation()
 
-  const destination = user
+  const destination = isAuthenticated && user
     ? resolvePostLoginRoute(getPrimaryRoleCode(user), redirectTo)
     : null
 
   useEffect(() => {
-    if (!isInitialized || !isAuthenticated || !user || !destination) return
+    if (!isInitialized || !destination) return
     setIsRedirecting(true)
     router.replace(destination)
-  }, [destination, isAuthenticated, isInitialized, router, user])
+  }, [destination, isInitialized, router])
 
-  if (isRedirecting || (isInitialized && isAuthenticated && user)) {
+  useEffect(() => {
+    if (isInitialized && !isAuthenticated) {
+      setIsRedirecting(false)
+    }
+  }, [isAuthenticated, isInitialized])
+
+  if (!isInitialized) {
+    return <LoginFallback />
+  }
+
+  if (isRedirecting || (isAuthenticated && user)) {
     return <RedirectingView />
   }
 
