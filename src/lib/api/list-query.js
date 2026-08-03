@@ -22,6 +22,8 @@ export function buildListQueryParams(params = {}) {
 export function getPaginatedList(response) {
   const payload = unwrapApiResponse(response)
 
+  console.log(payload)
+
   const items = Array.isArray(payload?.items)
     ? payload.items
     : Array.isArray(payload)
@@ -32,8 +34,8 @@ export function getPaginatedList(response) {
 
   return {
     items,
-    total: payload?.total ?? items.length,
-    page: payload?.page ?? 1,
-    limit: payload?.limit ?? items.length,
+    total: payload?.pagination?.total ?? items.length,
+    page: payload?.pagination?.page ?? 1,
+    limit: payload?.pagination?.limit ?? items.length,
   }
 }

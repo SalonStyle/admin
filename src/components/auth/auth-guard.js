@@ -23,7 +23,7 @@ export function AuthGuard({ children, fallback = null }) {
     return (
       fallback || (
         <div className="flex min-h-svh w-full items-center justify-center bg-[#f3f3f3]">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#8850FF] border-t-transparent" />
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       )
     )

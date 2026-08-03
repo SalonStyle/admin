@@ -39,7 +39,7 @@ export function TableSkeleton({
               </div>
             )}
             {showAddButton && (
-              <Button disabled className="shrink-0 bg-gradient-to-r from-[#4a52d9] to-[#141FBB] hover:opacity-90 rounded-lg h-10">
+              <Button disabled className="shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg h-10">
                 <Plus className="mr-2 h-4 w-4" /> {addNewLabel}
               </Button>
             )}

@@ -9,7 +9,7 @@ import {
   selectIsAuthInitialized,
   selectUser,
 } from "@/lib/redux/features/auth/auth-slice"
-import { useGetMeQuery, useLogoutMutation, authApi } from "@/lib/redux/features/auth/auth-api"
+import { useLogoutMutation, authApi } from "@/lib/redux/features/auth/auth-api"
 import {
   getPrimaryRoleCode,
   getSalonId,
@@ -27,18 +27,10 @@ export function useAuth() {
   const isAuthenticated = useSelector(selectIsAuthenticated)
   const isInitialized = useSelector(selectIsAuthInitialized)
 
-  const { data: meData, isLoading: isMeLoading, isFetching: isMeFetching } = useGetMeQuery(
-    undefined,
-    {
-      skip: !auth.accessToken,
-    }
-  )
-
   const [logoutMutation, { isLoading: isLoggingOut }] = useLogoutMutation()
 
-  const profile = auth.accessToken ? meData?.user || user : null
-  const isSessionPending =
-    Boolean(auth.accessToken) && !isAuthenticated && (isMeLoading || isMeFetching)
+  const profile = auth.accessToken ? user : null
+  const isSessionPending = Boolean(auth.accessToken) && !isAuthenticated
   const primaryRole = useMemo(() => getPrimaryRoleCode(profile), [profile])
   const roleCodes = useMemo(() => getUserRoleCodes(profile), [profile])
   const salonId = useMemo(() => getSalonId(profile), [profile])

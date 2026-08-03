@@ -11,6 +11,10 @@ export const categoriesApi = createApi({
       query: (params = {}) => `/v1/categories${buildListQueryParams(params)}`,
       providesTags: ["Category"],
     }),
+    getPublicCategories: builder.query({
+      query: (params = {}) => `/v1/public/categories${buildListQueryParams(params)}`,
+      providesTags: ["Category"],
+    }),
     getCategoryById: builder.query({
       query: (id) => `/v1/categories/${id}`,
       providesTags: (result, error, id) => [{ type: "Category", id }],
@@ -43,6 +47,7 @@ export const categoriesApi = createApi({
 
 export const {
   useGetCategoriesQuery,
+  useGetPublicCategoriesQuery,
   useGetCategoryByIdQuery,
   useCreateCategoryMutation,
   useUpdateCategoryMutation,

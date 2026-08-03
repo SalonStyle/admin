@@ -1,89 +1,74 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-
-// This will be replaced with your API URL later
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { buildListQueryParams } from "@/lib/api/list-query";
+import { baseQueryWithReauth } from "@/lib/redux/api/base-query";
 
 export const bookingsApi = createApi({
   reducerPath: "bookingsApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${API_BASE_URL}/bookings`,
-    // Add auth headers if needed
-    prepareHeaders: (headers, { getState }) => {
-      // Add auth token from state if available
-      // const token = getState().auth?.user?.access_token;
-      // if (token) {
-      //   headers.set("authorization", `Bearer ${token}`);
-      // }
-      headers.set("Content-Type", "application/json");
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ["Booking"],
   endpoints: (builder) => ({
-    // Get all bookings
+    // Get all bookings (filters based on - date, status, member_id, page and limit)
     getBookings: builder.query({
-      query: ({ page = 1, pageSize = 10, filters = {} } = {}) => {
-        const params = new URLSearchParams();
-        params.append("page", page);
-        params.append("pageSize", pageSize);
-        
-        if (filters.status) params.append("status", filters.status);
-        if (filters.date_from) params.append("date_from", filters.date_from);
-        if (filters.date_to) params.append("date_to", filters.date_to);
-        if (filters.staff_id) params.append("staff_id", filters.staff_id);
-        if (filters.service_id) params.append("service_id", filters.service_id);
-        
-        return {
-          url: `?${params.toString()}`,
-          method: "GET",
-        };
-      },
+      query: (params = {}) => `/v1/bookings${buildListQueryParams(params)}`,
       providesTags: ["Booking"],
     }),
 
     // Get single booking
     getBookingById: builder.query({
-      query: (id) => `/${id}`,
+      query: (id) => `/v1/bookings/${id}`,
       providesTags: (result, error, id) => [{ type: "Booking", id }],
     }),
 
     // Create booking
     createBooking: builder.mutation({
       query: (bookingData) => ({
-        url: "",
+        url: "/v1/bookings",
         method: "POST",
         body: bookingData,
       }),
       invalidatesTags: ["Booking"],
     }),
 
-    // Update booking
+    // Update booking (keep for compatibility, fallback to standard path)
     updateBooking: builder.mutation({
       query: ({ id, ...bookingData }) => ({
-        url: `/${id}`,
+        url: `/v1/bookings/${id}`,
         method: "PATCH",
         body: bookingData,
       }),
       invalidatesTags: (result, error, { id }) => [{ type: "Booking", id }, "Booking"],
     }),
 
-    // Delete booking
+    // Delete booking (keep for compatibility, fallback to standard path)
     deleteBooking: builder.mutation({
       query: (id) => ({
-        url: `/${id}`,
+        url: `/v1/bookings/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Booking"],
     }),
 
-    // Update booking status
-    updateBookingStatus: builder.mutation({
-      query: ({ id, status }) => ({
-        url: `/${id}/status`,
+    // Cancel booking (PATCH - /v1/bookings/{id}/cancel)
+    cancelBooking: builder.mutation({
+      query: (id) => ({
+        url: `/v1/bookings/${id}/cancel`,
         method: "PATCH",
-        body: { status },
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: "Booking", id }, "Booking"],
+      invalidatesTags: (result, error, id) => [{ type: "Booking", id }, "Booking"],
+    }),
+
+    // Get me schedule (GET - /v1/bookings/me/schedule)
+    getMeSchedule: builder.query({
+      query: (params = {}) => `/v1/bookings/me/schedule${buildListQueryParams(params)}`,
+    }),
+
+    // Get availability slots (POST - /v1/bookings/availability/slots)
+    getAvailabilitySlots: builder.query({
+      query: (body) => ({
+        url: "/v1/bookings/availability/slots",
+        method: "POST",
+        body,
+      }),
     }),
   }),
 });
@@ -94,6 +79,9 @@ export const {
   useCreateBookingMutation,
   useUpdateBookingMutation,
   useDeleteBookingMutation,
-  useUpdateBookingStatusMutation,
+  useCancelBookingMutation,
+  useGetMeScheduleQuery,
+  useGetAvailabilitySlotsQuery,
 } = bookingsApi;
+
 

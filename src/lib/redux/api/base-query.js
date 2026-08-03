@@ -15,13 +15,17 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
   prepareHeaders: (headers, { getState }) => {
-    const token = getState().auth?.accessToken || getStoredAccessToken()
+    if (!headers.has("Authorization")) {
+      const token = getState().auth?.accessToken || getStoredAccessToken()
 
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`)
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`)
+      }
     }
 
-    headers.set("Content-Type", "application/json")
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json")
+    }
     return headers
   },
 })

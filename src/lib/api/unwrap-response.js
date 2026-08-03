@@ -41,11 +41,11 @@ export function unwrapListResponse(response) {
   }
 
   if (Array.isArray(payload?.data)) {
-    return { data: payload.data, total: payload.total }
+    return { ...payload, data: payload.data }
   }
 
   if (Array.isArray(payload?.items)) {
-    return { data: payload.items, total: payload.total }
+    return { ...payload, data: payload.items }
   }
 
   return { data: [] }

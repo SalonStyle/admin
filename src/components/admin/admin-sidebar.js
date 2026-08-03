@@ -150,7 +150,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                 placeholder={collapsed ? "" : "Search"}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`h-10 w-full border-gray-200 bg-white text-gray-900 focus:border-[#8850FF] focus:ring-[#8850FF] ${collapsed ? "" : "pl-9 pr-8"}`}
+                className={`h-10 w-full border-gray-200 bg-white text-gray-900 focus:border-primary focus:ring-primary ${collapsed ? "" : "pl-9 pr-8"}`}
               />
               {!collapsed && (
                 <kbd className="pointer-events-none absolute right-2 top-1/2 inline-flex h-5 -translate-y-1/2 transform select-none items-center gap-1 rounded border border-gray-700 bg-gray-800 px-1.5 font-mono text-[10px] font-medium text-gray-400">
@@ -173,7 +173,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                   className={cn(
                     "relative mb-1 flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
                     isActive
-                      ? "bg-[#8850FF] text-white"
+                      ? "bg-primary text-primary-foreground"
                       : "text-gray-900 hover:bg-gray-200 hover:text-gray-900",
                     collapsed && "md:justify-center md:px-2"
                   )}
@@ -197,7 +197,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                   </p>
                   <Button
                     size="sm"
-                    className="h-8 w-full bg-[#8850FF] text-xs text-white hover:bg-[#8850FF]/90"
+                    className="h-8 w-full bg-primary text-xs text-primary-foreground hover:bg-primary/90"
                   >
                     Upgrade to Pro
                   </Button>
@@ -217,7 +217,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#8850FF] text-sm font-semibold text-white">
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                       {user?.email?.charAt(0).toUpperCase() || "U"}
                     </div>
                     {!collapsed && (
@@ -246,7 +246,7 @@ export default function AdminSidebar({ collapsed, setCollapsed }) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className="cursor-pointer hover:bg-[#8850FF]/10 hover:text-[#8850FF]"
+                  className="cursor-pointer hover:bg-primary/10 hover:text-primary"
                   disabled={isLoggingOut}
                   onSelect={(event) => {
                     event.preventDefault()

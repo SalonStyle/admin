@@ -5,7 +5,7 @@ const initialState = {
   selectedBooking: null,
   filters: {
     status: null,
-    date_range: null, // { from: Date, to: Date } or null
+    date: null, // Date string (YYYY-MM-DD) or null
     staff_id: null,
     service_id: null,
   },

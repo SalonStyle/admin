@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import AdminSidebar from "@/components/admin/admin-sidebar"
 import { AuthGuard } from "@/components/auth/auth-guard"
@@ -37,7 +37,11 @@ export default function AdminLayout({ children }) {
               collapsed ? "md:ml-16" : "md:ml-64"
             }`}
           >
-            <main className="min-h-screen bg-[#f3f3f3] p-6">{children}</main>
+            <main className="min-h-screen bg-[#f3f3f3] p-6">
+              <Suspense fallback={<div className="p-8 text-center text-gray-500">Loading...</div>}>
+                {children}
+              </Suspense>
+            </main>
           </div>
         </div>
       </RouteAccessGuard>

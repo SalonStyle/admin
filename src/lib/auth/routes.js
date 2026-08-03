@@ -7,6 +7,7 @@ export const ROUTE_ACCESS = {
   "/categories": [ROLE_CODES.SALON],
   "/members": [ROLE_CODES.SALON],
   "/bookings": [ROLE_CODES.SALON, ROLE_CODES.MEMBER],
+  "/settings": [ROLE_CODES.SALON],
 }
 
 export function getDefaultRouteForRole(roleCode) {

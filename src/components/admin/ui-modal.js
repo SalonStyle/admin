@@ -97,6 +97,7 @@ export function UIModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className={`${sizeClasses[size]} max-h-[90vh] flex flex-col p-0`}
+        onInteractOutside={(e) => e.preventDefault()}
       >
         {(title || description) && (
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-gray-200 flex-shrink-0">
@@ -133,7 +134,7 @@ export function UIModal({
                   handleSubmit(e);
                 }}
                 disabled={isSubmitting}
-                className="bg-indigo-600 hover:bg-indigo-700 hover:opacity-90 text-white"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {isSubmitting ? "Submitting..." : submitText}
               </Button>

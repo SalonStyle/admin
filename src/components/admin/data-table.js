@@ -66,7 +66,7 @@ export function DataTable({
   const [internalPage, setInternalPage] = useState(1);
   const [internalPageSize, setInternalPageSize] = useState(10);
 
-  const currentPage = manualPagination ? externalPage : internalPage;
+  const currentPage = manualPagination ? Number(externalPage) : internalPage;
   const pageSize = manualPagination ? externalPageSize : internalPageSize;
 
   // Use external filter values if provided, otherwise use internal state
@@ -109,61 +109,61 @@ export function DataTable({
 
     result = result.filter((item) => {
       return filters.every((filter) => {
-          const filterValue = activeFilterValues[filter.id];
+        const filterValue = activeFilterValues[filter.id];
 
-          // Skip filter if no value
-          if (!filterValue && filterValue !== 0 && filterValue !== false) {
+        // Skip filter if no value
+        if (!filterValue && filterValue !== 0 && filterValue !== false) {
+          return true;
+        }
+
+        const itemValue = item[filter.field || filter.id];
+
+        switch (filter.type) {
+          case FILTER_TYPES.SELECT:
+            return String(itemValue) === String(filterValue);
+
+          case FILTER_TYPES.DATE:
+            if (!itemValue || !filterValue) return true;
+            const itemDate = new Date(itemValue).toISOString().split("T")[0];
+            const filterDate = new Date(filterValue)
+              .toISOString()
+              .split("T")[0];
+            return itemDate === filterDate;
+
+          case FILTER_TYPES.DATE_RANGE:
+            if (!itemValue || !filterValue) return true;
+            const itemDateValue = new Date(itemValue);
+            const fromDate = filterValue.from
+              ? new Date(filterValue.from)
+              : null;
+            const toDate = filterValue.to ? new Date(filterValue.to) : null;
+
+            if (fromDate && itemDateValue < fromDate) return false;
+            if (toDate && itemDateValue > toDate) return false;
             return true;
-          }
 
-          const itemValue = item[filter.field || filter.id];
+          case FILTER_TYPES.TEXT:
+            if (!itemValue || !filterValue) return true;
+            return String(itemValue)
+              .toLowerCase()
+              .includes(String(filterValue).toLowerCase());
 
-          switch (filter.type) {
-            case FILTER_TYPES.SELECT:
-              return String(itemValue) === String(filterValue);
-
-            case FILTER_TYPES.DATE:
-              if (!itemValue || !filterValue) return true;
-              const itemDate = new Date(itemValue).toISOString().split("T")[0];
-              const filterDate = new Date(filterValue)
-                .toISOString()
-                .split("T")[0];
-              return itemDate === filterDate;
-
-            case FILTER_TYPES.DATE_RANGE:
-              if (!itemValue || !filterValue) return true;
-              const itemDateValue = new Date(itemValue);
-              const fromDate = filterValue.from
-                ? new Date(filterValue.from)
-                : null;
-              const toDate = filterValue.to ? new Date(filterValue.to) : null;
-
-              if (fromDate && itemDateValue < fromDate) return false;
-              if (toDate && itemDateValue > toDate) return false;
+          case FILTER_TYPES.NUMBER:
+            if (
+              itemValue === undefined ||
+              itemValue === null ||
+              filterValue === undefined ||
+              filterValue === null
+            ) {
               return true;
-
-            case FILTER_TYPES.TEXT:
-              if (!itemValue || !filterValue) return true;
-              return String(itemValue)
-                .toLowerCase()
-                .includes(String(filterValue).toLowerCase());
-
-            case FILTER_TYPES.NUMBER:
-              if (
-                itemValue === undefined ||
-                itemValue === null ||
-                filterValue === undefined ||
-                filterValue === null
-              ) {
-                return true;
-              }
-              const numValue = Number(itemValue);
-              const numFilter = Number(filterValue);
-              if (filter.operator === "greater_than")
-                return numValue > numFilter;
-              if (filter.operator === "less_than") return numValue < numFilter;
-              if (filter.operator === "equals") return numValue === numFilter;
-              return numValue === numFilter;
+            }
+            const numValue = Number(itemValue);
+            const numFilter = Number(filterValue);
+            if (filter.operator === "greater_than")
+              return numValue > numFilter;
+            if (filter.operator === "less_than") return numValue < numFilter;
+            if (filter.operator === "equals") return numValue === numFilter;
+            return numValue === numFilter;
 
           default:
             return true;
@@ -182,6 +182,8 @@ export function DataTable({
 
   const totalItems = manualPagination ? totalCount || 0 : filteredData.length || 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
+  console.log(totalItems);
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalItems);
@@ -310,7 +312,7 @@ export function DataTable({
             {onAddNew && (
               <Button
                 onClick={onAddNew}
-                className="shrink-0 bg-indigo-600 hover:bg-indigo-700 hover:opacity-90 rounded-lg h-10 text-white"
+                className="shrink-0 bg-primary hover:bg-primary/90 rounded-lg h-10 text-primary-foreground"
               >
                 <Plus className="mr-2 h-4 w-4" /> {addNewLabel}
               </Button>
@@ -319,17 +321,17 @@ export function DataTable({
         </div>
       </div>
 
-          {/* Filter Bar */}
-          {filters && filters.length > 0 && (
-            <div>
-              <FilterBar
-                filters={filters}
-                values={activeFilterValues}
-                onChange={handleFilterChange}
-                onClear={() => handleFilterChange({})}
-              />
-            </div>
-          )}
+      {/* Filter Bar */}
+      {filters && filters.length > 0 && (
+        <div>
+          <FilterBar
+            filters={filters}
+            values={activeFilterValues}
+            onChange={handleFilterChange}
+            onClear={() => handleFilterChange({})}
+          />
+        </div>
+      )}
 
       {/* Table Section */}
       <div className="rounded-lg overflow-hidden bg-white">
@@ -391,7 +393,7 @@ export function DataTable({
                   const originalIndex = filteredData.indexOf(row);
                   const isLastRow = index === currentData.length - 1;
                   const totalCols = columns.length + (actions ? 1 : 0) + (deleteSelectedEnable || deleteAllEnable ? 1 : 0);
-                  
+
                   return (
                     <TableRow
                       key={index}
@@ -422,7 +424,7 @@ export function DataTable({
                         const isLastCol = colIndex === columns.length - 1;
                         const isFirstCell = isFirstCol;
                         const isLastCell = isLastCol;
-                        
+
                         return (
                           <TableCell
                             key={colIndex}
@@ -546,7 +548,7 @@ export function DataTable({
                         className={cn(
                           "h-8 min-w-8 rounded-lg text-sm font-medium",
                           currentPage === page
-                            ? "bg-gradient-to-r from-[#4a52d9] to-[#141FBB] text-white border-0 shadow-sm"
+                            ? "bg-primary text-primary-foreground border-0 shadow-sm"
                             : "border-gray-200 hover:bg-gray-50 text-gray-600 bg-white"
                         )}
                         onClick={() => goToPage(page)}
