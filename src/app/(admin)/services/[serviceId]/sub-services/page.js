@@ -1,27 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { useGetCategoriesQuery } from "@/lib/redux/features/categories/categories-api"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useGetCategoriesQuery } from "@/lib/redux/features/categories/categories-api";
 import {
   useGetServicesQuery,
+  useGetServiceByIdQuery,
   useCreateServiceMutation,
   useUpdateServiceMutation,
   useDeleteServiceMutation,
-} from "@/lib/redux/features/services/services-api"
-import { Edit, Trash2, Layers } from "lucide-react"
-import Link from "next/link"
-import { ServerDataTable } from "@/components/admin/server-data-table"
-import { UIModal } from "@/components/admin/ui-modal"
-import { DeleteConfirmationModal } from "@/components/admin/delete-confirmation-modal"
-import { SimpleForm } from "@/components/admin/simple-form"
-import { FILTER_TYPES } from "@/components/admin/filter-bar"
-import { getPaginatedList } from "@/lib/api/list-query"
+} from "@/lib/redux/features/services/services-api";
+import { Edit, Trash2, ArrowLeft } from "lucide-react";
+import { ServerDataTable } from "@/components/admin/server-data-table";
+import { UIModal } from "@/components/admin/ui-modal";
+import { DeleteConfirmationModal } from "@/components/admin/delete-confirmation-modal";
+import { SimpleForm } from "@/components/admin/simple-form";
+import { FILTER_TYPES } from "@/components/admin/filter-bar";
+import { getPaginatedList } from "@/lib/api/list-query";
+import { useParams, useRouter } from "next/navigation";
 
 const STATUS_OPTIONS = [
   { value: "active", label: "Active" },
   { value: "inactive", label: "Inactive" },
-]
+];
 
 const DURATION_OPTIONS = [
   { value: "15", label: "15 min" },
@@ -30,80 +31,97 @@ const DURATION_OPTIONS = [
   { value: "60", label: "60 min" },
   { value: "90", label: "90 min" },
   { value: "120", label: "120 min" },
-]
+];
 
 function normalizeServicePayload(data) {
   return {
     name: data.name,
     description: data.description,
-    duration_minutes: data.duration_minutes ? Number(data.duration_minutes) : undefined,
+    duration_minutes: data.duration_minutes
+      ? Number(data.duration_minutes)
+      : undefined,
     price: data.price ? Number(data.price) : undefined,
     category_id: data.category_id,
     status: data.status,
     gender: data.gender,
-  }
+    parent_id: data.parent_id,
+  };
 }
 
-export default function ServicesPage() {
-  const { data: categoriesData } = useGetCategoriesQuery({ limit: 100, status: "active" })
-  const { items: activeCategories } = getPaginatedList(categoriesData)
+export default function SubServicesPage() {
+  const { serviceId } = useParams();
+  const router = useRouter();
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingService, setEditingService] = useState(null)
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
-  const [serviceToDelete, setServiceToDelete] = useState(null)
+  const { data: parentServiceData } = useGetServiceByIdQuery(serviceId);
+  const parentService = parentServiceData?.data || parentServiceData;
 
-  const [createService, { isLoading: isCreating }] = useCreateServiceMutation()
-  const [updateService, { isLoading: isUpdating }] = useUpdateServiceMutation()
-  const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation()
+  const { data: categoriesData } = useGetCategoriesQuery({
+    limit: 100,
+    status: "active",
+  });
+  const { items: activeCategories } = getPaginatedList(categoriesData);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingService, setEditingService] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState(null);
+
+  const [createService, { isLoading: isCreating }] = useCreateServiceMutation();
+  const [updateService, { isLoading: isUpdating }] = useUpdateServiceMutation();
+  const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation();
 
   const handleDeleteClick = (id, serviceName) => {
-    setServiceToDelete({ id, name: serviceName })
-    setDeleteModalOpen(true)
-  }
+    setServiceToDelete({ id, name: serviceName });
+    setDeleteModalOpen(true);
+  };
 
   const handleDeleteConfirm = async () => {
-    if (!serviceToDelete) return
+    if (!serviceToDelete) return;
 
     try {
-      await deleteService(serviceToDelete.id).unwrap()
-      setDeleteModalOpen(false)
-      setServiceToDelete(null)
+      await deleteService(serviceToDelete.id).unwrap();
+      setDeleteModalOpen(false);
+      setServiceToDelete(null);
     } catch (error) {
-      console.error("Failed to delete service:", error)
+      console.error("Failed to delete service:", error);
     }
-  }
+  };
 
   const handleEditService = (service) => {
     setEditingService({
       ...service,
       duration_minutes:
-        service.duration_minutes != null ? String(service.duration_minutes) : "",
+        service.duration_minutes != null
+          ? String(service.duration_minutes)
+          : "",
       price: service.price != null ? String(service.price) : "",
-    })
-    setIsModalOpen(true)
-  }
+    });
+    setIsModalOpen(true);
+  };
 
   const handleAddService = () => {
-    setEditingService(null)
-    setIsModalOpen(true)
-  }
+    setEditingService(null);
+    setIsModalOpen(true);
+  };
 
   const handleServiceSubmit = async (data) => {
-    const payload = normalizeServicePayload(data)
+    const payload = {
+      ...normalizeServicePayload(data),
+      parent_id: serviceId, // Force parent_id to the current service
+    };
 
     try {
       if (editingService) {
-        await updateService({ id: editingService.id, ...payload }).unwrap()
+        await updateService({ id: editingService.id, ...payload }).unwrap();
       } else {
-        await createService(payload).unwrap()
+        await createService(payload).unwrap();
       }
-      setIsModalOpen(false)
-      setEditingService(null)
+      setIsModalOpen(false);
+      setEditingService(null);
     } catch (error) {
-      console.error("Failed to save service:", error)
+      console.error("Failed to save service:", error);
     }
-  }
+  };
 
   const filters = [
     {
@@ -121,7 +139,7 @@ export default function ServicesPage() {
       type: FILTER_TYPES.SELECT,
       options: STATUS_OPTIONS,
     },
-  ]
+  ];
 
   const columns = [
     {
@@ -130,7 +148,12 @@ export default function ServicesPage() {
       cell: (row) => (
         <div className="flex items-center gap-3">
           <div className="rounded-full bg-blue-100 p-2">
-            <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              className="h-4 w-4 text-blue-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -176,7 +199,7 @@ export default function ServicesPage() {
         </div>
       ),
     },
-  ]
+  ];
 
   const formFields = [
     {
@@ -212,7 +235,9 @@ export default function ServicesPage() {
     {
       id: "category_id",
       label: "Category",
-      placeholder: activeCategories.length ? "Select category" : "Add categories first",
+      placeholder: activeCategories.length
+        ? "Select category"
+        : "Add categories first",
       type: "select",
       required: true,
       options: activeCategories.map((category) => ({
@@ -239,14 +264,9 @@ export default function ServicesPage() {
       ],
       required: true,
     },
-  ]
+  ];
 
   const rowActions = (row) => [
-    <Link href={`/services/${row.id}/sub-services`} key="sub-services">
-      <Button variant="outline" size="icon" title="View Sub Services">
-        <Layers className="h-4 w-4 text-blue-500" />
-      </Button>
-    </Link>,
     <Button
       key="edit"
       variant="outline"
@@ -263,35 +283,41 @@ export default function ServicesPage() {
     >
       <Trash2 className="h-4 w-4 text-red-500" />
     </Button>,
-  ]
+  ];
 
   return (
     <div className="space-y-5">
       <ServerDataTable
         useQuery={useGetServicesQuery}
+        queryArg={{ parent_id: serviceId }}
         columns={columns}
         filters={filters}
         actions={rowActions}
         onAddNew={handleAddService}
-        addNewLabel="Add Service"
+        addNewLabel="Add Sub Service"
         maxVisibleActions={3}
-        title="All Services"
-        subtitle="Manage salon services linked to categories"
+        title="Sub Services"
+        subtitle=""
       />
 
       <UIModal
         isOpen={isModalOpen}
         onClose={() => {
-          setIsModalOpen(false)
-          setEditingService(null)
+          setIsModalOpen(false);
+          setEditingService(null);
         }}
-        title={editingService ? "Edit Service" : "Add New Service"}
+        title={editingService ? "Edit Sub Service" : "Add New Sub Service"}
+        description={
+          editingService
+            ? "Update the details of this sub-service."
+            : "Fill in the information to add a new sub-service to your catalog."
+        }
         onSubmit={handleServiceSubmit}
         submitText={editingService ? "Update Service" : "Create Service"}
         cancelText="Cancel"
         onCancel={() => {
-          setIsModalOpen(false)
-          setEditingService(null)
+          setIsModalOpen(false);
+          setEditingService(null);
         }}
         isSubmitting={isCreating || isUpdating}
         formId="service-form"
@@ -306,8 +332,8 @@ export default function ServicesPage() {
       <DeleteConfirmationModal
         isOpen={deleteModalOpen}
         onClose={() => {
-          setDeleteModalOpen(false)
-          setServiceToDelete(null)
+          setDeleteModalOpen(false);
+          setServiceToDelete(null);
         }}
         onConfirm={handleDeleteConfirm}
         title="Delete Service"
@@ -316,5 +342,5 @@ export default function ServicesPage() {
         isDeleting={isDeleting}
       />
     </div>
-  )
+  );
 }

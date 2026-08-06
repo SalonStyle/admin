@@ -59,7 +59,9 @@ export function DataTable({
 }) {
   const [internalSearchTerm, setInternalSearchTerm] = useState("");
   const searchTerm =
-    externalSearchValue !== undefined ? externalSearchValue : internalSearchTerm;
+    externalSearchValue !== undefined
+      ? externalSearchValue
+      : internalSearchTerm;
   const [selectedRows, setSelectedRows] = useState([]);
   const [internalFilterValues, setInternalFilterValues] = useState({});
   const paginationOptions = [10, 25, 50, 100];
@@ -159,8 +161,7 @@ export function DataTable({
             }
             const numValue = Number(itemValue);
             const numFilter = Number(filterValue);
-            if (filter.operator === "greater_than")
-              return numValue > numFilter;
+            if (filter.operator === "greater_than") return numValue > numFilter;
             if (filter.operator === "less_than") return numValue < numFilter;
             if (filter.operator === "equals") return numValue === numFilter;
             return numValue === numFilter;
@@ -180,10 +181,10 @@ export function DataTable({
     manualPagination,
   ]);
 
-  const totalItems = manualPagination ? totalCount || 0 : filteredData.length || 0;
+  const totalItems = manualPagination
+    ? totalCount || 0
+    : filteredData.length || 0;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-
-  console.log(totalItems);
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalItems);
@@ -194,7 +195,7 @@ export function DataTable({
   const allCurrentPageSelected =
     currentData?.length > 0 &&
     currentData.every((item) =>
-      selectedRows.includes(filteredData?.indexOf(item))
+      selectedRows.includes(filteredData?.indexOf(item)),
     );
 
   const goToPage = (page) => {
@@ -216,7 +217,7 @@ export function DataTable({
     const firstItemIndex = (currentPage - 1) * pageSize;
     const newPage = Math.floor(firstItemIndex / newPageSize) + 1;
     setInternalPage(
-      Math.max(1, Math.min(newPage, Math.ceil(totalItems / newPageSize)))
+      Math.max(1, Math.min(newPage, Math.ceil(totalItems / newPageSize))),
     );
   };
 
@@ -243,35 +244,7 @@ export function DataTable({
 
     if (!Array.isArray(actionElements)) return actionElements;
 
-    if (actionElements.length <= maxVisibleActions) {
-      return <div className="flex justify-end gap-2">{actionElements}</div>;
-    }
-
-    return (
-      <div className="flex justify-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {actionElements.map((action, i) => (
-              <DropdownMenuItem
-                key={i}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const onClick = action.props.onClick;
-                  if (onClick) onClick(e);
-                }}
-              >
-                {action.props.children}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    );
+    return <div className="flex justify-end gap-2">{actionElements}</div>;
   };
 
   return (
@@ -280,9 +253,7 @@ export function DataTable({
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              {title}
-            </h2>
+            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
             {subtitle && (
               <p className="text-sm text-gray-600 font-medium mt-1">
                 {subtitle}
@@ -340,10 +311,9 @@ export function DataTable({
             <TableHeader>
               <TableRow className="hover:bg-transparent border-none">
                 {(deleteSelectedEnable || deleteAllEnable) && (
-                  <TableHead className={cn(
-                    "w-[50px] px-4 border-none",
-                    "rounded-tl-lg"
-                  )}>
+                  <TableHead
+                    className={cn("w-[50px] px-4 border-none", "rounded-tl-lg")}
+                  >
                     <Checkbox
                       checked={allCurrentPageSelected}
                       onCheckedChange={handleSelectAll}
@@ -351,7 +321,8 @@ export function DataTable({
                   </TableHead>
                 )}
                 {columns.map((column, index) => {
-                  const isFirst = index === 0 && !(deleteSelectedEnable || deleteAllEnable);
+                  const isFirst =
+                    index === 0 && !(deleteSelectedEnable || deleteAllEnable);
                   const isLast = index === columns.length - 1 && !actions;
                   return (
                     <TableHead
@@ -360,7 +331,7 @@ export function DataTable({
                         "!text-gray-600 font-medium text-sm px-4 py-3 capitalize border-b border-gray-200",
                         isFirst && "rounded-tl-lg",
                         isLast && "rounded-tr-lg",
-                        column.className
+                        column.className,
                       )}
                     >
                       {column.header}
@@ -392,14 +363,17 @@ export function DataTable({
                 currentData?.map((row, index) => {
                   const originalIndex = filteredData.indexOf(row);
                   const isLastRow = index === currentData.length - 1;
-                  const totalCols = columns.length + (actions ? 1 : 0) + (deleteSelectedEnable || deleteAllEnable ? 1 : 0);
+                  const totalCols =
+                    columns.length +
+                    (actions ? 1 : 0) +
+                    (deleteSelectedEnable || deleteAllEnable ? 1 : 0);
 
                   return (
                     <TableRow
                       key={index}
                       className={cn(
                         "bg-transparent hover:bg-gray-50/50 border-none",
-                        onRowClick && "cursor-pointer"
+                        onRowClick && "cursor-pointer",
                       )}
                       onClick={onRowClick ? () => onRowClick(row) : undefined}
                     >
@@ -408,7 +382,7 @@ export function DataTable({
                           onClick={(e) => e.stopPropagation()}
                           className={cn(
                             "px-4 py-4 border-none",
-                            isLastRow && "!rounded-bl-lg"
+                            isLastRow && "!rounded-bl-lg",
                           )}
                         >
                           <Checkbox
@@ -432,7 +406,7 @@ export function DataTable({
                               "px-4 py-4 font-medium text-[#272829] text-[0.95rem] border-none",
                               isLastRow && isFirstCell && "!rounded-bl-lg",
                               isLastRow && isLastCell && "!rounded-br-lg",
-                              column.className
+                              column.className,
                             )}
                           >
                             {column.cell
@@ -446,7 +420,7 @@ export function DataTable({
                           onClick={(e) => e.stopPropagation()}
                           className={cn(
                             "px-4 py-4 border-none",
-                            isLastRow && "!rounded-br-lg"
+                            isLastRow && "!rounded-br-lg",
                           )}
                         >
                           {renderActions(row, originalIndex)}
@@ -549,7 +523,7 @@ export function DataTable({
                           "h-8 min-w-8 rounded-lg text-sm font-medium",
                           currentPage === page
                             ? "bg-primary text-primary-foreground border-0 shadow-sm"
-                            : "border-gray-200 hover:bg-gray-50 text-gray-600 bg-white"
+                            : "border-gray-200 hover:bg-gray-50 text-gray-600 bg-white",
                         )}
                         onClick={() => goToPage(page)}
                       >

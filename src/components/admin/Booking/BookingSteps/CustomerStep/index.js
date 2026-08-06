@@ -1,8 +1,17 @@
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
-function CustomerStep({ customer, onChange }) {
+function CustomerStep({ onSubmit, onBack }) {
+  const [customer, setCustomer] = useState({ name: "", phone: "" });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (customer.name && customer.phone) {
+      onSubmit(customer);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div>
@@ -12,14 +21,15 @@ function CustomerStep({ customer, onChange }) {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <form id="customer-booking-form" onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="customer_name">Full name</Label>
           <Input
             id="customer_name"
+            required
             placeholder="Customer name"
             value={customer.name}
-            onChange={(e) => onChange("name", e.target.value)}
+            onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
             className="h-11 shadow-none"
           />
         </div>
@@ -27,34 +37,25 @@ function CustomerStep({ customer, onChange }) {
           <Label htmlFor="customer_mobile">Mobile number</Label>
           <Input
             id="customer_mobile"
+            required
             type="tel"
             placeholder="+91 9876543210"
-            value={customer.mobile}
-            onChange={(e) => onChange("mobile", e.target.value)}
+            value={customer.phone}
+            onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
             className="h-11 shadow-none"
           />
         </div>
-        {/* <div className="space-y-2">
-          <Label htmlFor="customer_email">Email (optional)</Label>
-          <Input
-            id="customer_email"
-            type="email"
-            placeholder="customer@example.com"
-            value={customer.email}
-            onChange={(e) => onChange("email", e.target.value)}
-            className="h-11 shadow-none"
-          />
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="customer_notes">Notes (optional)</Label>
-          <Textarea
-            id="customer_notes"
-            placeholder="Any special requests..."
-            value={customer.notes}
-            onChange={(e) => onChange("notes", e.target.value)}
-            className="min-h-[100px] shadow-none"
-          />
-        </div> */}
+      </form>
+
+      {/* Mobile Back Button */}
+      <div className="pt-6 lg:hidden">
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-sm font-medium text-gray-500 hover:text-gray-900"
+        >
+          Back
+        </button>
       </div>
     </div>
   );

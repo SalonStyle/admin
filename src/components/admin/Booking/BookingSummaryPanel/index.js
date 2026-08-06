@@ -1,9 +1,14 @@
-import { format } from "date-fns"
-import { Button } from "@/components/ui/button"
-import { Loader2, ArrowRight } from "lucide-react"
-import { buildTimeSlots, formatPrice, formatDuration, getServiceProfessionalLabel } from "@/lib/helper"
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Loader2, ArrowRight } from "lucide-react";
+import {
+  buildTimeSlots,
+  formatPrice,
+  formatDuration,
+  getServiceProfessionalLabel,
+} from "@/lib/helper";
 
-const TIME_SLOTS = buildTimeSlots()
+const TIME_SLOTS = buildTimeSlots();
 
 function BookingSummaryPanel({
   selectedServices,
@@ -33,7 +38,10 @@ function BookingSummaryPanel({
               <p className="mt-1 text-sm text-gray-500">
                 {formatDuration(service.duration_minutes)}
                 {" · "}
-                {getServiceProfessionalLabel(serviceProfessionals[service.id], members)}
+                {getServiceProfessionalLabel(
+                  serviceProfessionals[service.id],
+                  members,
+                )}
               </p>
             </div>
           ))
@@ -53,7 +61,7 @@ function BookingSummaryPanel({
       </div>
 
       <div className="border-t border-gray-200 bg-white p-5">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-2 flex items-center justify-between">
           <span className="text-sm text-gray-600">Total</span>
           <span className="text-lg font-bold text-gray-900">
             {formatPrice(totalAmount)}
@@ -68,7 +76,7 @@ function BookingSummaryPanel({
           type="button"
           onClick={onContinue}
           disabled={!canContinue || isSubmitting}
-          className="h-12 w-full rounded-xl bg-gray-900 text-base font-medium text-white hover:bg-gray-800"
+          className="h-12 w-full rounded-xl bg-primary text-base font-medium text-primary-foreground hover:bg-primary/90"
         >
           {isSubmitting ? (
             <>
@@ -84,7 +92,7 @@ function BookingSummaryPanel({
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
-export default BookingSummaryPanel
+export default BookingSummaryPanel;

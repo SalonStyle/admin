@@ -53,6 +53,7 @@ export function UIModal({
   isSubmitting = false,
   formRef,
   formId = "dynamic-form",
+  fixedHeight = false,
 }) {
   const contentRef = useRef(null);
   const sizeClasses = {
@@ -96,7 +97,7 @@ export function UIModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className={`${sizeClasses[size]} max-h-[90vh] flex flex-col p-0`}
+        className={`${sizeClasses[size]} ${fixedHeight ? "h-[85vh]" : "max-h-[90vh]"} overflow-hidden flex flex-col p-0 bg-[#fafafa]`}
         onInteractOutside={(e) => e.preventDefault()}
       >
         {(title || description) && (

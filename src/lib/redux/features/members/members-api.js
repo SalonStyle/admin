@@ -1,6 +1,6 @@
-import { createApi } from "@reduxjs/toolkit/query/react"
-import { buildListQueryParams } from "@/lib/api/list-query"
-import { baseQueryWithReauth } from "@/lib/redux/api/base-query"
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { buildListQueryParams } from "@/lib/api/list-query";
+import { baseQueryWithReauth } from "@/lib/redux/api/base-query";
 
 export const membersApi = createApi({
   reducerPath: "membersApi",
@@ -19,6 +19,22 @@ export const membersApi = createApi({
       }),
       invalidatesTags: ["Member"],
     }),
+    updateMember: builder.mutation({
+      query: (memberData) => ({
+        url: `/v1/members`,
+        method: "POST",
+        body: memberData,
+      }),
+      invalidatesTags: ["Member"],
+    }),
+    uploadProfilePhoto: builder.mutation({
+      query: ({ id, formData }) => ({
+        url: `/v1/users/${id}/profile-photo`,
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["Member"],
+    }),
     deleteMember: builder.mutation({
       query: (id) => ({
         url: `/v1/members/${id}`,
@@ -27,10 +43,12 @@ export const membersApi = createApi({
       invalidatesTags: ["Member"],
     }),
   }),
-})
+});
 
 export const {
   useGetMembersQuery,
   useCreateMemberMutation,
+  useUpdateMemberMutation,
   useDeleteMemberMutation,
-} = membersApi
+  useUploadProfilePhotoMutation,
+} = membersApi;

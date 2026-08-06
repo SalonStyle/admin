@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/admin/date-picker";
+import { Switch } from "@/components/ui/switch";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 export const SimpleForm = forwardRef(function SimpleForm(
   { fields, initialData = {}, formId = "dynamic-form", onFormChange },
@@ -98,6 +100,60 @@ export const SimpleForm = forwardRef(function SimpleForm(
               ))}
             </SelectContent>
           </Select>
+        );
+      case "switch":
+        return (
+          <div className="flex items-center space-x-2">
+            <Switch
+              id={field.id}
+              checked={!!value}
+              onCheckedChange={(checked) => handleChange(field.id, checked)}
+            />
+          </div>
+        );
+      case "image":
+        let previewUrl = "";
+        if (value) {
+          if (typeof value === "string") {
+            previewUrl = value;
+          } else if (value instanceof File) {
+            previewUrl = URL.createObjectURL(value);
+          }
+        }
+        return (
+          <div className="flex flex-col gap-2">
+            {previewUrl && (
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="h-20 w-20 rounded-full object-cover border"
+              />
+            )}
+            <Input
+              id={field.id}
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleChange(field.id, file);
+                } else {
+                  handleChange(field.id, "");
+                }
+              }}
+              className="focus-visible:ring-[1px] shadow-none"
+              required={field.required && !value}
+            />
+          </div>
+        );
+      case "multi-select":
+        return (
+          <MultiSelect
+            options={field.options || []}
+            selected={Array.isArray(value) ? value : []}
+            onChange={(newVal) => handleChange(field.id, newVal)}
+            placeholder={field.placeholder || "Select items..."}
+          />
         );
       default:
         return null;

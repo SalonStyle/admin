@@ -5,7 +5,7 @@ import { baseQueryWithReauth } from "@/lib/redux/api/base-query";
 export const bookingsApi = createApi({
   reducerPath: "bookingsApi",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Booking"],
+  tagTypes: ["Booking", "Slots"],
   endpoints: (builder) => ({
     // Get all bookings (filters based on - date, status, member_id, page and limit)
     getBookings: builder.query({
@@ -26,7 +26,7 @@ export const bookingsApi = createApi({
         method: "POST",
         body: bookingData,
       }),
-      invalidatesTags: ["Booking"],
+      invalidatesTags: ["Booking", "Slots"],
     }),
 
     // Update booking (keep for compatibility, fallback to standard path)
@@ -36,7 +36,10 @@ export const bookingsApi = createApi({
         method: "PATCH",
         body: bookingData,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: "Booking", id }, "Booking"],
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Booking", id },
+        "Booking",
+      ],
     }),
 
     // Delete booking (keep for compatibility, fallback to standard path)
@@ -54,12 +57,17 @@ export const bookingsApi = createApi({
         url: `/v1/bookings/${id}/cancel`,
         method: "PATCH",
       }),
-      invalidatesTags: (result, error, id) => [{ type: "Booking", id }, "Booking"],
+      invalidatesTags: (result, error, id) => [
+        { type: "Booking", id },
+        "Booking",
+        "Slots",
+      ],
     }),
 
     // Get me schedule (GET - /v1/bookings/me/schedule)
     getMeSchedule: builder.query({
-      query: (params = {}) => `/v1/bookings/me/schedule${buildListQueryParams(params)}`,
+      query: (params = {}) =>
+        `/v1/bookings/me/schedule${buildListQueryParams(params)}`,
     }),
 
     // Get availability slots (POST - /v1/bookings/availability/slots)
@@ -69,6 +77,8 @@ export const bookingsApi = createApi({
         method: "POST",
         body,
       }),
+      providesTags: ["Slots"],
+      keepUnusedDataFor: 0,
     }),
   }),
 });
@@ -83,5 +93,3 @@ export const {
   useGetMeScheduleQuery,
   useGetAvailabilitySlotsQuery,
 } = bookingsApi;
-
-

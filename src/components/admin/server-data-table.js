@@ -27,7 +27,8 @@ export function ServerDataTable({
   const { data, isLoading, isFetching } = useQuery(mergedQueryParams)
   const { items, total } = getPaginatedList(data)
 
-  const showSkeleton = (isLoading || isFetching) && items.length === 0
+  // Only show full skeleton on initial load, not background refetches
+  const showSkeleton = isLoading;
 
   if (showSkeleton) {
     return (
